@@ -1,0 +1,38 @@
+name: Build and Test
+on:
+  push:
+    # run when these files changed
+    paths:
+      - "**.h"
+      - "**.hpp"
+      - "**.cpp"
+      - "Makefile"
+      - ".github/workflows/test.yml"
+
+jobs:
+  test-query-compilation:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: install dependencies
+        run: |
+          sudo apt-get install -y build-essential gcc g++ bison flex
+
+      - name: checkout project
+        uses: actions/checkout@v3
+
+      - name: build saneql
+        run: |
+          make -j4 bin/saneql
+
+      - name: compile saneql tpch queries
+        run: |
+          for query in $( seq 1 22 ); do
+            bin/saneql examples/tpch/q$query.sane
+          done
+
+      - name: compile saneql feature examples
+        run: |
+          for example in $(ls examples/features); do
+            bin/saneql examples/features/$example
+          done
